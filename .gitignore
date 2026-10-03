@@ -3,6 +3,9 @@
 # dependencies
 node_modules/
 
+# local npm registry config (machine/network-specific)
+.npmrc
+
 # Expo
 .expo/
 dist/
