@@ -24,6 +24,7 @@ export interface PersistOutcome {
 export async function persistGroup(
   group: RawGroup,
   slotId: string,
+  minAttendees: number,
 ): Promise<PersistOutcome> {
   const activity = getActivity(group.activityId);
   if (!activity) return { droppedReason: 'unknown activity' };
@@ -51,7 +52,7 @@ export async function persistGroup(
       venue_address: venue.address,
       venue_lat: venue.lat,
       venue_lng: venue.lng,
-      min_attendees: 3,
+      min_attendees: minAttendees,
       max_attendees: group.memberIds.length,
       status: 'pending',
     })

@@ -1,4 +1,5 @@
 import { useMockAi } from '../lib/env';
+import { getGroupSizeRange } from '../data/groupSizes';
 import { buildPools, getWaitingUsers, type Pool } from './pool';
 import {
   groupUsersWithGemini,
@@ -71,8 +72,17 @@ export async function runMatch(): Promise<MatchRunResult> {
     const result = await groupPoolWithRetry(fresh);
     if (!result) continue;
 
+    const prefById = new Map(pool.users.map((u) => [u.id, u.group_size]));
+
     for (const g of result.groups) {
-      const outcome = await persistGroup(g, pool.slotId);
+      // Confirm threshold comes from the group's size preference (small -> 3,
+      // large -> 8), capped at the actual group size so it stays reachable.
+      const prefs = g.memberIds.map((id) => prefById.get(id) ?? 'small');
+      const largeCount = prefs.filter((p) => p === 'large').length;
+      const pref = largeCount > prefs.length / 2 ? 'large' : 'small';
+      const minAttendees = Math.min(getGroupSizeRange(pref).min, g.memberIds.length);
+
+      const outcome = await persistGroup(g, pool.slotId, minAttendees);
       if (outcome.created) {
         events.push(outcome.created);
         g.memberIds.forEach((id) => assigned.add(id)); // only count placed on success
