@@ -2,6 +2,19 @@ import { Router } from 'express';
 import { closeExpiredEvents } from '../jobs/closeExpired';
 import { supabaseAdmin } from '../lib/supabaseAdmin';
 import { applyRsvp } from '../matching/rsvpService';
+import { findVenue } from '../venues';
+import { resolveSlotTime } from '../matching/slotTime';
+
+// 7 seeded users → + the signed-in user = a group of 8 for the demo.
+const DEMO_GROUP = [
+  'c0000000-0000-4000-8000-000000000002',
+  'c0000000-0000-4000-8000-000000000003',
+  'c0000000-0000-4000-8000-000000000004',
+  'c0000000-0000-4000-8000-000000000005',
+  'c0000000-0000-4000-8000-000000000006',
+  'c0000000-0000-4000-8000-000000000008',
+  'c0000000-0000-4000-8000-000000000009',
+];
 
 export const jobsRouter = Router();
 
@@ -81,6 +94,64 @@ jobsRouter.post('/reset-demo', async (_req, res) => {
       .neq('id', '00000000-0000-0000-0000-000000000000');
     if (error) throw error;
     res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+// POST /jobs/demo-invite { userId } → deterministic demo: wipe events, then
+// create one real "Morning Hike" and invite the signed-in user + 7 seeded users
+// (a group of 8). Guarantees the demo outcome regardless of Gemini.
+jobsRouter.post('/demo-invite', async (req, res) => {
+  const { userId } = req.body ?? {};
+  if (!userId) {
+    res.status(400).json({ error: 'userId required' });
+    return;
+  }
+  try {
+    await supabaseAdmin.from('events').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    // make sure the signed-in user has a row (don't overwrite their profile)
+    await supabaseAdmin.from('users').upsert({ id: userId }, { onConflict: 'id', ignoreDuplicates: true });
+
+    const venue = await findVenue('morning_hike', 'kitsilano');
+    const t = resolveSlotTime('sat_morning', 120);
+    const startsAt = (t?.startsAt ?? new Date()).toISOString();
+    const endsAt = (t?.endsAt ?? new Date()).toISOString();
+
+    const { data: event, error } = await supabaseAdmin
+      .from('events')
+      .insert({
+        title: `Morning Hike at ${venue?.name ?? 'Jericho Beach'}`,
+        description:
+          'A relaxed Saturday-morning hike with a friendly group who all love the outdoors. Easy pace, great views over the water, and good company. Nobody organized this — Gather matched you from people nearby who share your interests. Just show up.',
+        activity_id: 'morning_hike',
+        slot_id: 'sat_morning',
+        area: 'kitsilano',
+        starts_at: startsAt,
+        ends_at: endsAt,
+        rsvp_deadline_at: startsAt,
+        venue_provider: venue?.provider ?? 'mock',
+        venue_provider_id: venue?.providerId ?? 'demo',
+        venue_name: venue?.name ?? 'Jericho Beach Park',
+        venue_address: venue?.address ?? 'Vancouver, BC',
+        venue_lat: venue?.lat ?? 49.2726,
+        venue_lng: venue?.lng ?? -123.1927,
+        min_attendees: 3,
+        max_attendees: 8,
+        status: 'pending',
+      })
+      .select('id')
+      .single();
+    if (error || !event) throw error ?? new Error('event insert failed');
+
+    const rows = [
+      { event_id: event.id, user_id: userId, status: 'invited' },
+      ...DEMO_GROUP.map((id) => ({ event_id: event.id, user_id: id, status: 'invited' })),
+    ];
+    const { error: attErr } = await supabaseAdmin.from('event_attendees').insert(rows);
+    if (attErr) throw attErr;
+
+    res.json({ eventId: event.id, invited: rows.length });
   } catch (err) {
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }

@@ -17,6 +17,7 @@ const EMOJI: Record<string, string> = {
 export default function Home() {
   const { session, profile } = useAuth();
   const [invites, setInvites] = useState<MyInvite[]>([]);
+  const [dismissed, setDismissed] = useState(false);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -31,6 +32,7 @@ export default function Home() {
   useFocusEffect(useCallback(() => { load(); }, [load]));
 
   const name = profile?.name || 'there';
+  const newInvite = invites.find((i) => i.myStatus === 'invited');
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -45,6 +47,20 @@ export default function Home() {
             <Ionicons name="bookmark-outline" size={24} color={dark.text} />
           </View>
         </View>
+
+        {newInvite && !dismissed && (
+          <Pressable style={styles.banner} onPress={() => router.push(`/event/${newInvite.event.id}`)}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bannerTitle}>👋 Hi {name}!</Text>
+              <Text style={styles.bannerBody}>
+                {newInvite.event.max_attendees} people are registered and interested — you&apos;re invited to {newInvite.event.title}. Tap to see who&apos;s going.
+              </Text>
+            </View>
+            <Pressable onPress={() => setDismissed(true)} hitSlop={10}>
+              <Ionicons name="close" size={20} color={dark.text} />
+            </Pressable>
+          </Pressable>
+        )}
 
         <Text style={styles.section}>Your Gatherings</Text>
         {invites.length === 0 ? (
@@ -92,6 +108,17 @@ const styles = StyleSheet.create({
   name: { color: dark.accent },
   topIcons: { flexDirection: 'row', gap: spacing(2) },
   section: { fontFamily: fonts.heading, fontSize: 24, color: dark.text, marginBottom: spacing(1.5) },
+  banner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing(1),
+    backgroundColor: dark.accent,
+    borderRadius: 16,
+    padding: spacing(2),
+    marginBottom: spacing(3),
+  },
+  bannerTitle: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#FFFFFF' },
+  bannerBody: { fontFamily: fonts.body, fontSize: 14, color: '#FFF2EC', marginTop: spacing(0.5), lineHeight: 20 },
   card: { backgroundColor: dark.card, borderRadius: 16, padding: spacing(2.5), alignItems: 'center' },
   empty: { fontFamily: fonts.body, fontSize: 15, color: dark.muted, marginBottom: spacing(2), textAlign: 'center' },
   cta: { backgroundColor: dark.accent, borderRadius: 999, paddingVertical: spacing(1.5), paddingHorizontal: spacing(3) },

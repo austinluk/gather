@@ -81,6 +81,11 @@ export function demoAccept(eventId: string) {
   return post('/jobs/demo-accept', { eventId });
 }
 
+// Deterministic demo: invite the signed-in user into a Morning Hike with 8 people.
+export function demoInvite(userId: string) {
+  return post('/jobs/demo-invite', { userId });
+}
+
 export function resetDemo() {
   return post('/jobs/reset-demo');
 }

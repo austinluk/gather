@@ -11,16 +11,18 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
 import { Card } from '@/components/Card';
+import { useAuth } from '@/lib/auth';
 import {
   demoAccept,
+  demoInvite,
   demoState,
   resetDemo,
-  runMatch,
   type DemoEvent,
 } from '@/lib/api';
 import { colors, fontWeight, radius, spacing } from '@/theme';
 
 export default function Demo() {
+  const { session } = useAuth();
   const [events, setEvents] = useState<DemoEvent[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -58,18 +60,28 @@ export default function Demo() {
     setBusy(null);
   }
 
-  // Simulate the scheduled "weekly drop": a short delay, then matching runs and
-  // invites (in-app notifications) land for everyone matched.
+  // Simulate the scheduled "weekly drop": a short delay, then you get matched
+  // into a Morning Hike with 8 people and land on Home with a notification.
   function scheduledDrop() {
-    if (busy || countdown !== null) return;
-    let n = 6;
+    if (!session || busy || countdown !== null) return;
+    let n = 5;
     setCountdown(n);
     const iv = setInterval(() => {
       n -= 1;
       if (n <= 0) {
         clearInterval(iv);
         setCountdown(null);
-        run('run', runMatch);
+        (async () => {
+          setBusy('run');
+          setError(null);
+          try {
+            await demoInvite(session.user.id);
+            router.replace('/home');
+          } catch (e) {
+            setError(e instanceof Error ? e.message : 'Action failed');
+          }
+          setBusy(null);
+        })();
       } else {
         setCountdown(n);
       }
