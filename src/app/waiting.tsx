@@ -146,7 +146,7 @@ export default function Home() {
               <Text style={styles.linkMuted}>Sign out</Text>
             </Pressable>
           ) : (
-            <Pressable onPress={promptLogin}>
+            <Pressable onPress={() => promptLogin()}>
               <Text style={styles.link}>Log in</Text>
             </Pressable>
           )}

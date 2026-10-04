@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth';
 import { colors } from '@/theme';
 
 export default function Index() {
-  const { loading } = useAuth();
+  const { session, loading } = useAuth();
 
   if (loading) {
     return (
@@ -14,6 +14,7 @@ export default function Index() {
     );
   }
 
+  if (!session) return <Redirect href="/login" />;
   return <Redirect href="/waiting" />;
 }
 

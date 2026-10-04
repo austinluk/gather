@@ -1,131 +1,74 @@
-import { useState } from 'react';
-import { Redirect, router } from 'expo-router';
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Redirect } from 'expo-router';
+import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { Button } from '@/components/Button';
 import { useAuth } from '@/lib/auth';
-import { supabase } from '@/lib/supabase';
-import { colors, fonts, radius, spacing } from '@/theme';
+import { fonts, spacing } from '@/theme';
 
-export default function Login() {
-  const { session } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+const DARK = '#211F1C';
+const ORANGE = '#E8734A';
+const MUTED = '#4A443E';
 
-  if (session) return <Redirect href="/" />;
+export default function Welcome() {
+  const { session, promptLogin } = useAuth();
 
-  async function signIn() {
-    setLoading(true);
-    setError(null);
-    setNotice(null);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    if (error) setError(error.message);
-    setLoading(false);
-  }
-
-  async function signUp() {
-    setLoading(true);
-    setError(null);
-    setNotice(null);
-    const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
-    if (error) setError(error.message);
-    else if (!data.session) {
-      setNotice('Account created. If email confirmation is on, confirm your email then sign in.');
-    }
-    setLoading(false);
-  }
+  // Already signed in -> straight to the app.
+  if (session) return <Redirect href="/waiting" />;
 
   return (
-    <View style={styles.root}>
+    <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      <View style={styles.hero}>
-        <Text style={styles.wordmark}>Gather</Text>
-        <Text style={styles.tagline}>find your people in Vancouver 🌼</Text>
+      <View style={styles.content}>
+        <View style={styles.art}>
+          <Image
+            source={require('../../assets/welcome.jpg')}
+            style={styles.image}
+            resizeMode="cover"
+          />
+        </View>
+
+        <View style={styles.copy}>
+          <Text style={styles.title}>Welcome to Gather!</Text>
+          <Text style={styles.subtitle}>
+            Your people are out there. Let&apos;s bring you together.
+          </Text>
+        </View>
+
+        <View style={styles.actions}>
+          <Pressable
+            style={({ pressed }) => [styles.btn, { backgroundColor: ORANGE }, pressed && styles.pressed]}
+            onPress={() => promptLogin('login')}
+          >
+            <Text style={styles.btnText}>Sign In</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.btn, { backgroundColor: MUTED }, pressed && styles.pressed]}
+            onPress={() => promptLogin('signup')}
+          >
+            <Text style={styles.btnText}>Get started</Text>
+          </Pressable>
+        </View>
       </View>
-
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.formWrap}
-      >
-        <ScrollView contentContainerStyle={styles.form} keyboardShouldPersistTaps="handled">
-          <Text style={styles.lead}>AI-made events that bring strangers together.</Text>
-
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="email-address"
-            value={email}
-            onChangeText={setEmail}
-            placeholderTextColor={colors.textMuted}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
-            placeholderTextColor={colors.textMuted}
-          />
-
-          {error ? <Text style={styles.error}>{error}</Text> : null}
-          {notice ? <Text style={styles.notice}>{notice}</Text> : null}
-
-          <Button label="Sign in" onPress={signIn} loading={loading} style={{ marginTop: spacing(1) }} />
-          <Button label="Create account" variant="ghost" onPress={signUp} disabled={loading} />
-          <Button label="Open demo panel" variant="ghost" onPress={() => router.push('/demo')} disabled={loading} />
-        </ScrollView>
-      </KeyboardAvoidingView>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.background },
-  hero: {
-    backgroundColor: colors.hero,
-    paddingTop: 96,
-    paddingBottom: spacing(5),
-    paddingHorizontal: spacing(3),
+  container: { flex: 1, backgroundColor: DARK },
+  content: { flex: 1, paddingHorizontal: spacing(3), justifyContent: 'center' },
+  art: { alignItems: 'center', marginBottom: spacing(4) },
+  image: { width: 300, height: 300, borderRadius: 32, maxWidth: '100%' },
+  copy: { marginBottom: spacing(4) },
+  title: { fontFamily: fonts.heading, fontSize: 46, color: '#FFFFFF', lineHeight: 50 },
+  subtitle: { fontFamily: fonts.bodySemi, fontSize: 18, color: '#E9E4DC', marginTop: spacing(1.5), lineHeight: 25 },
+  actions: { flexDirection: 'row', gap: spacing(1.5) },
+  btn: {
+    flex: 1,
+    borderRadius: 999,
+    paddingVertical: spacing(2),
     alignItems: 'center',
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    justifyContent: 'center',
   },
-  wordmark: { fontFamily: fonts.script, fontSize: 72, color: colors.heroText, lineHeight: 78 },
-  tagline: { fontFamily: fonts.bodySemi, fontSize: 16, color: colors.heroText },
-  formWrap: { flex: 1 },
-  form: { padding: spacing(3), paddingTop: spacing(4) },
-  lead: {
-    fontFamily: fonts.headingSemi,
-    fontSize: 20,
-    color: colors.text,
-    textAlign: 'center',
-    marginBottom: spacing(3),
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: 14,
-    paddingHorizontal: spacing(2),
-    paddingVertical: spacing(1.75),
-    fontSize: 16,
-    fontFamily: fonts.body,
-    color: colors.text,
-    marginBottom: spacing(1.5),
-  },
-  error: { color: '#B00020', marginBottom: spacing(1), fontFamily: fonts.body },
-  notice: { color: colors.textMuted, marginBottom: spacing(1), fontFamily: fonts.body },
+  pressed: { opacity: 0.85 },
+  btnText: { fontFamily: fonts.bodyBold, fontSize: 18, color: '#FFFFFF' },
 });

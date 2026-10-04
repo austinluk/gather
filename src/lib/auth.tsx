@@ -26,8 +26,8 @@ interface AuthState {
   loading: boolean;
   refreshProfile: () => Promise<void>;
   signOut: () => Promise<void>;
-  // Show the login/signup modal (for gated actions when browsing as a guest).
-  promptLogin: () => void;
+  // Show the login/signup modal (for gated actions / the welcome screen).
+  promptLogin: (mode?: 'login' | 'signup') => void;
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined);
@@ -37,6 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [loginVisible, setLoginVisible] = useState(false);
+  const [loginMode, setLoginMode] = useState<'login' | 'signup'>('login');
 
   async function loadProfile(userId: string) {
     const { data } = await supabase
@@ -55,7 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   }
 
-  function promptLogin() {
+  function promptLogin(mode: 'login' | 'signup' = 'login') {
+    setLoginMode(mode);
     setLoginVisible(true);
   }
 
@@ -84,7 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{ session, profile, loading, refreshProfile, signOut, promptLogin }}
     >
       {children}
-      <LoginModal visible={loginVisible} onDismiss={() => setLoginVisible(false)} />
+      <LoginModal
+        visible={loginVisible}
+        initialMode={loginMode}
+        onDismiss={() => setLoginVisible(false)}
+      />
     </AuthContext.Provider>
   );
 }

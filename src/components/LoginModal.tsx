@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Modal,
@@ -11,21 +11,33 @@ import {
 import { supabase } from '@/lib/supabase';
 import { colors, fonts, radius, spacing } from '@/theme';
 
-// Flock-style auth overlay: shown when a guest attempts a gated action.
-// Closes itself via the auth listener in AuthProvider once a session exists.
+// Flock-style auth overlay: shown when a guest attempts a gated action or taps
+// Sign In / Get started. Closes itself via the auth listener in AuthProvider
+// once a session exists.
 export function LoginModal({
   visible,
+  initialMode = 'login',
   onDismiss,
 }: {
   visible: boolean;
+  initialMode?: 'login' | 'signup';
   onDismiss: () => void;
 }) {
-  const [mode, setMode] = useState<'login' | 'signup'>('login');
+  const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+
+  // Open in the requested mode each time the modal appears.
+  useEffect(() => {
+    if (visible) {
+      setMode(initialMode);
+      setError(null);
+      setNotice(null);
+    }
+  }, [visible, initialMode]);
 
   async function submit() {
     setLoading(true);
