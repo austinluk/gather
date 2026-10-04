@@ -5,9 +5,9 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { router } from 'expo-router';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './supabase';
-import { LoginModal } from '@/components/LoginModal';
 
 export interface Profile {
   id: string;
@@ -36,8 +36,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loginVisible, setLoginVisible] = useState(false);
-  const [loginMode, setLoginMode] = useState<'login' | 'signup'>('login');
 
   async function loadProfile(userId: string) {
     const { data } = await supabase
@@ -57,8 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function promptLogin(mode: 'login' | 'signup' = 'login') {
-    setLoginMode(mode);
-    setLoginVisible(true);
+    router.push(`/signin?mode=${mode}`);
   }
 
   useEffect(() => {
@@ -72,7 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(next);
       if (next?.user) {
         await loadProfile(next.user.id);
-        setLoginVisible(false); // close the modal once logged in
       } else {
         setProfile(null);
       }
@@ -86,11 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{ session, profile, loading, refreshProfile, signOut, promptLogin }}
     >
       {children}
-      <LoginModal
-        visible={loginVisible}
-        initialMode={loginMode}
-        onDismiss={() => setLoginVisible(false)}
-      />
     </AuthContext.Provider>
   );
 }
