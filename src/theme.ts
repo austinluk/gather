@@ -51,4 +51,16 @@ export const shadow = {
 
 export const theme = { colors, spacing, radius, fontWeight, shadow, fonts };
 
+// Dark palette used by the signed-in app shell (Explore, Home, tabs) — matches
+// the Flock dark reference.
+export const dark = {
+  bg: '#151311',
+  card: '#242019',
+  card2: '#2A251E',
+  text: '#F5F1EA',
+  muted: '#A49E94',
+  accent: '#E8734A',
+  sage: '#9CB36E',
+} as const;
+
 export type Theme = typeof theme;

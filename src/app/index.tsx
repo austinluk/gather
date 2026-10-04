@@ -16,7 +16,7 @@ export default function Index() {
 
   if (!session) return <Redirect href="/login" />;
   if (!profile) return <Redirect href="/onboarding" />;
-  return <Redirect href="/waiting" />;
+  return <Redirect href="/home" />;
 }
 
 const styles = StyleSheet.create({
