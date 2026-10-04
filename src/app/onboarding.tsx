@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
-import { AREAS, BUDGETS, GROUP_SIZES, INTERESTS, SLOTS } from '@/constants/options';
+import { AREAS, BUDGETS, GROUP_SIZES, SLOTS } from '@/constants/options';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
 import { fonts, spacing } from '@/theme';
@@ -22,14 +22,67 @@ const LIGHT = '#E7E3DC';
 const TEXT = '#F5F1EA';
 const MUTED = '#B8B2A8';
 
-const INTEREST_CATEGORIES: { title: string; ids: string[] }[] = [
-  { title: 'Outdoors & Active', ids: ['hiking', 'running'] },
-  { title: 'Food & Drink', ids: ['coffee'] },
-  { title: 'Arts & Culture', ids: ['art', 'music', 'photography'] },
-  { title: 'Games & Play', ids: ['board_games'] },
+// Rich interest set for the survey. The 7 ids that have a matching activity in
+// the backend (hiking, running, coffee, board_games, art, music, photography)
+// drive real AI matching; the rest are stored as preferences.
+const INTEREST_CATEGORIES: { title: string; items: { id: string; label: string }[] }[] = [
+  {
+    title: 'Sports',
+    items: [
+      { id: 'soccer', label: 'Soccer' }, { id: 'basketball', label: 'Basketball' },
+      { id: 'tennis', label: 'Tennis' }, { id: 'volleyball', label: 'Volleyball' },
+      { id: 'badminton', label: 'Badminton' }, { id: 'table_tennis', label: 'Table Tennis' },
+      { id: 'baseball', label: 'Baseball' }, { id: 'running', label: 'Running' },
+      { id: 'cycling', label: 'Cycling' }, { id: 'swimming', label: 'Swimming' },
+      { id: 'climbing', label: 'Climbing' }, { id: 'yoga', label: 'Yoga' },
+    ],
+  },
+  {
+    title: 'Outdoors',
+    items: [
+      { id: 'hiking', label: 'Hiking' }, { id: 'camping', label: 'Camping' },
+      { id: 'kayaking', label: 'Kayaking' }, { id: 'skiing', label: 'Skiing' },
+      { id: 'surfing', label: 'Surfing' }, { id: 'fishing', label: 'Fishing' },
+      { id: 'gardening', label: 'Gardening' }, { id: 'birdwatching', label: 'Birdwatching' },
+      { id: 'photography', label: 'Photography' }, { id: 'picnics', label: 'Picnics' },
+      { id: 'stargazing', label: 'Stargazing' }, { id: 'beach', label: 'Beach Days' },
+    ],
+  },
+  {
+    title: 'Food & Drink',
+    items: [
+      { id: 'coffee', label: 'Coffee' }, { id: 'cocktails', label: 'Cocktails' },
+      { id: 'wine', label: 'Wine' }, { id: 'craft_beer', label: 'Craft Beer' },
+      { id: 'tea', label: 'Tea' }, { id: 'baking', label: 'Baking' },
+      { id: 'bbq', label: 'BBQ' }, { id: 'brunch', label: 'Brunch' },
+      { id: 'ramen', label: 'Ramen' }, { id: 'sushi', label: 'Sushi' },
+      { id: 'dim_sum', label: 'Dim Sum' }, { id: 'street_food', label: 'Street Food' },
+    ],
+  },
+  {
+    title: 'Entertainment',
+    items: [
+      { id: 'movies', label: 'Movies' }, { id: 'tv_shows', label: 'TV Shows' },
+      { id: 'gaming', label: 'Gaming' }, { id: 'music', label: 'Music' },
+      { id: 'podcasts', label: 'Podcasts' }, { id: 'anime', label: 'Anime' },
+      { id: 'comics', label: 'Comics' }, { id: 'art', label: 'Art' },
+      { id: 'theater', label: 'Theater' }, { id: 'dance', label: 'Dance' },
+      { id: 'karaoke', label: 'Karaoke' }, { id: 'live_music', label: 'Live Music' },
+    ],
+  },
+  {
+    title: 'Hobbies',
+    items: [
+      { id: 'board_games', label: 'Board Games' }, { id: 'reading', label: 'Reading' },
+      { id: 'writing', label: 'Writing' }, { id: 'painting', label: 'Painting' },
+      { id: 'pottery', label: 'Pottery' }, { id: 'chess', label: 'Chess' },
+      { id: 'puzzles', label: 'Puzzles' }, { id: 'knitting', label: 'Knitting' },
+      { id: 'journaling', label: 'Journaling' }, { id: 'languages', label: 'Languages' },
+      { id: 'volunteering', label: 'Volunteering' }, { id: 'crafts', label: 'Crafts' },
+    ],
+  },
 ];
 const GENDERS = ['Woman', 'Man', 'Prefer not to say', 'Other'];
-const labelFor = (id: string) => INTERESTS.find((o) => o.id === id)?.label ?? id;
 
 const STEPS = [
   { title: 'About you', subtitle: 'Just the basics to set up your profile.' },
@@ -132,12 +185,12 @@ export default function Onboarding() {
             <View key={cat.title} style={{ marginTop: spacing(2.5) }}>
               <Text style={styles.catTitle}>{cat.title}</Text>
               <View style={styles.wrap}>
-                {cat.ids.map((id) => (
+                {cat.items.map((it) => (
                   <Chip
-                    key={id}
-                    label={labelFor(id)}
-                    selected={interests.includes(id)}
-                    onPress={() => toggle(interests, setInterests, id)}
+                    key={it.id}
+                    label={it.label}
+                    selected={interests.includes(it.id)}
+                    onPress={() => toggle(interests, setInterests, it.id)}
                   />
                 ))}
               </View>

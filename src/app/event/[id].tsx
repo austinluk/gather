@@ -28,15 +28,20 @@ export default function EventScreen() {
 
   const refresh = useCallback(async () => {
     if (!id || !session) return;
-    const [ev, count, status] = await Promise.all([
-      getEvent(id),
-      getConfirmedCount(id),
-      getMyStatus(id, session.user.id),
-    ]);
-    setEvent(ev);
-    setConfirmed(count);
-    setMyStatus(status);
-    setLoaded(true);
+    try {
+      const [ev, count, status] = await Promise.all([
+        getEvent(id),
+        getConfirmedCount(id),
+        getMyStatus(id, session.user.id),
+      ]);
+      setEvent(ev);
+      setConfirmed(count);
+      setMyStatus(status);
+    } catch {
+      // ignore network errors — the screen just stays on its last state
+    } finally {
+      setLoaded(true);
+    }
   }, [id, session]);
 
   useEffect(() => {
