@@ -30,7 +30,7 @@ export async function getWaitingUsers(): Promise<WaitingUser[]> {
     .from('event_attendees')
     .select('user_id, events!inner(status)')
     .in('status', ['invited', 'confirmed'])
-    .eq('events.status', 'pending');
+    .in('events.status', ['pending', 'confirmed']);
   if (busyErr) throw busyErr;
 
   const busyIds = new Set((busy ?? []).map((b: { user_id: string }) => b.user_id));
