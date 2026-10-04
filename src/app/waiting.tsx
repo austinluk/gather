@@ -129,7 +129,7 @@ const styles = StyleSheet.create({
   badgeInline: {
     alignSelf: 'flex-start',
     backgroundColor: colors.confirmed,
-    color: colors.primary,
+    color: colors.success,
     fontWeight: fontWeight.heading,
     fontSize: 13,
     paddingHorizontal: spacing(1.5),

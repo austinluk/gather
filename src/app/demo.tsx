@@ -127,7 +127,7 @@ const styles = StyleSheet.create({
   counter: { fontSize: 15, color: colors.primary, fontWeight: fontWeight.heading, marginTop: spacing(1) },
   members: { marginTop: spacing(1) },
   member: { fontSize: 14, color: colors.textMuted, marginTop: spacing(0.25) },
-  memberConfirmed: { color: colors.primary, fontWeight: fontWeight.heading },
+  memberConfirmed: { color: colors.success, fontWeight: fontWeight.heading },
   memberDeclined: { color: colors.textMuted, textDecorationLine: 'line-through' },
   badge: { paddingHorizontal: spacing(1), paddingVertical: spacing(0.25), borderRadius: radius.chip },
   badgePending: { backgroundColor: colors.pending },

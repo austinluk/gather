@@ -5,7 +5,7 @@ import {
   Text,
   type ViewStyle,
 } from 'react-native';
-import { colors, fontWeight, radius, spacing } from '@/theme';
+import { colors, fontWeight, radius, shadow, spacing } from '@/theme';
 
 export function Button({
   label,
@@ -56,7 +56,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     minHeight: 52,
   },
-  primary: { backgroundColor: colors.primary },
+  primary: { backgroundColor: colors.primary, ...shadow },
   ghost: { backgroundColor: 'transparent' },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },

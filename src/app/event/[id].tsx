@@ -176,5 +176,5 @@ const styles = StyleSheet.create({
   error: { color: '#B00020', marginTop: spacing(2) },
   footer: { padding: spacing(3), gap: spacing(1) },
   footerMuted: { textAlign: 'center', color: colors.textMuted },
-  footerConfirmed: { textAlign: 'center', color: colors.primary, fontWeight: fontWeight.heading, fontSize: 16, marginBottom: spacing(1) },
+  footerConfirmed: { textAlign: 'center', color: colors.success, fontWeight: fontWeight.heading, fontSize: 16, marginBottom: spacing(1) },
 });
