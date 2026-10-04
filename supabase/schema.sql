@@ -20,6 +20,7 @@ create table users (
   id uuid primary key default gen_random_uuid(),
   name text,
   phone text unique,
+  gender text,                                     -- "Woman" | "Man" | "Prefer not to say" | "Other"
   interests text[] not null default '{}',         -- ["hiking", "coffee"]
   acceptable_areas text[] not null default '{}',   -- ["kitsilano", "downtown"]
   selected_slots text[] not null default '{}',     -- slot ids from backend/data/slots.ts

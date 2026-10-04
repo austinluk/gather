@@ -12,8 +12,8 @@ const MUTED = '#4A443E';
 export default function Welcome() {
   const { session, promptLogin } = useAuth();
 
-  // Already signed in -> straight to the app.
-  if (session) return <Redirect href="/waiting" />;
+  // Already signed in -> let the index route to survey or home.
+  if (session) return <Redirect href="/" />;
 
   return (
     <SafeAreaView style={styles.container}>

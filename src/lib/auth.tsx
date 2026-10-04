@@ -12,6 +12,7 @@ import { supabase } from './supabase';
 export interface Profile {
   id: string;
   name: string | null;
+  gender: string | null;
   interests: string[];
   acceptable_areas: string[];
   selected_slots: string[];

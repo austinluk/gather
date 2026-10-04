@@ -26,8 +26,8 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  // On successful auth the session is set -> leave this page for the app.
-  if (session) return <Redirect href="/waiting" />;
+  // On successful auth the session is set -> let the index route to survey or home.
+  if (session) return <Redirect href="/" />;
 
   async function submit() {
     setLoading(true);
