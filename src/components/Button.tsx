@@ -5,7 +5,7 @@ import {
   Text,
   type ViewStyle,
 } from 'react-native';
-import { colors, fontWeight, radius, shadow, spacing } from '@/theme';
+import { colors, fonts, radius, shadow, spacing } from '@/theme';
 
 export function Button({
   label,
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
   ghost: { backgroundColor: 'transparent' },
   disabled: { opacity: 0.5 },
   pressed: { opacity: 0.85 },
-  text: { fontSize: 16, fontWeight: fontWeight.heading },
+  text: { fontSize: 16, fontFamily: fonts.bodyBold },
   textPrimary: { color: colors.surface },
   textGhost: { color: colors.primary },
 });

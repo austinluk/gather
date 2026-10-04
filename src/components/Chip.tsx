@@ -1,5 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { colors, fontWeight, radius, spacing } from '@/theme';
+import { colors, fonts, radius, spacing } from '@/theme';
 
 export function Chip({
   label,
@@ -31,6 +31,6 @@ const styles = StyleSheet.create({
   },
   selected: { backgroundColor: colors.primary, borderColor: colors.primary },
   unselected: { backgroundColor: colors.surface, borderColor: colors.border },
-  text: { fontSize: 14, color: colors.text, fontWeight: fontWeight.body },
-  textSelected: { color: colors.surface, fontWeight: fontWeight.heading },
+  text: { fontSize: 14, color: colors.text, fontFamily: fonts.body },
+  textSelected: { color: colors.surface, fontFamily: fonts.bodyBold },
 });

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Redirect, Stack, useLocalSearchParams } from 'expo-router';
+import { Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
@@ -18,7 +18,7 @@ import { colors, fontWeight, radius, spacing } from '@/theme';
 
 export default function EventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { session } = useAuth();
+  const { session, promptLogin } = useAuth();
   const [event, setEvent] = useState<GatherEvent | null>(null);
   const [confirmed, setConfirmed] = useState(0);
   const [myStatus, setMyStatus] = useState<AttendeeStatus | null>(null);
@@ -62,10 +62,12 @@ export default function EventScreen() {
     };
   }, [id, refresh]);
 
-  if (!session) return <Redirect href="/login" />;
-
   async function act(action: 'accept' | 'decline') {
-    if (!id || !session) return;
+    if (!session) {
+      promptLogin();
+      return;
+    }
+    if (!id) return;
     setBusy(true);
     setError(null);
     try {

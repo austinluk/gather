@@ -7,7 +7,7 @@ import { Chip } from '@/components/Chip';
 import { AREAS, BUDGETS, GROUP_SIZES, INTERESTS, SLOTS } from '@/constants/options';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/lib/supabase';
-import { colors, fontWeight, spacing } from '@/theme';
+import { colors, fonts, spacing } from '@/theme';
 
 export default function Onboarding() {
   const { session, refreshProfile } = useAuth();
@@ -148,16 +148,17 @@ export default function Onboarding() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   content: { padding: spacing(3) },
-  title: { fontSize: 28, fontWeight: fontWeight.heading, color: colors.text },
+  title: { fontSize: 28, fontFamily: fonts.heading, color: colors.text },
   subtitle: {
     fontSize: 15,
+    fontFamily: fonts.body,
     color: colors.textMuted,
     marginTop: spacing(0.5),
     marginBottom: spacing(2),
   },
   label: {
     fontSize: 16,
-    fontWeight: fontWeight.heading,
+    fontFamily: fonts.bodyBold,
     color: colors.text,
     marginTop: spacing(2.5),
     marginBottom: spacing(1),

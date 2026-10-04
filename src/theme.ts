@@ -12,6 +12,19 @@ export const colors = {
   pending: '#E7E3DC', // warm grey chip
   confirmed: '#DCEAD9', // soft sage chip
   border: '#ECE7DF', // warm border
+  hero: '#AEBE4F', // olive-green hero block (Flock-style)
+  heroText: '#FFFFFF',
+} as const;
+
+// Custom fonts (loaded in src/app/_layout.tsx). With custom fonts, set
+// fontFamily (not fontWeight) — each family already encodes its weight.
+export const fonts = {
+  script: 'Caveat_700Bold', // handwritten wordmark
+  heading: 'Fraunces_700Bold', // warm serif headings
+  headingSemi: 'Fraunces_600SemiBold',
+  body: 'Nunito_400Regular', // rounded sans body
+  bodySemi: 'Nunito_600SemiBold',
+  bodyBold: 'Nunito_700Bold',
 } as const;
 
 // 8px base unit: spacing(1) = 8, spacing(2) = 16, spacing(3) = 24 ...
@@ -36,6 +49,6 @@ export const shadow = {
   elevation: 2,
 } as const;
 
-export const theme = { colors, spacing, radius, fontWeight, shadow };
+export const theme = { colors, spacing, radius, fontWeight, shadow, fonts };
 
 export type Theme = typeof theme;
