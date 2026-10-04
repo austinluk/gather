@@ -4,8 +4,8 @@ import {
   groupUsersWithGemini,
   mockGroupUsers,
   type GroupingResult,
-  type RawGroup,
 } from '../ai/gemini';
+import { persistGroup, type CreatedEvent } from './persist';
 import { validateGrouping } from './validate';
 
 function extractJson(text: string): string {
@@ -43,7 +43,8 @@ async function groupPoolWithRetry(pool: Pool): Promise<GroupingResult | null> {
 
 export interface MatchRunResult {
   mode: 'mock' | 'gemini';
-  groups: RawGroup[];
+  events: CreatedEvent[];
+  dropped: { reason: string }[];
   unmatchedUserIds: string[];
   poolCount: number;
 }
@@ -52,7 +53,8 @@ export async function runMatch(): Promise<MatchRunResult> {
   const users = await getWaitingUsers();
   const pools = buildPools(users);
   const assigned = new Set<string>();
-  const groups: RawGroup[] = [];
+  const events: CreatedEvent[] = [];
+  const dropped: { reason: string }[] = [];
 
   // Sequential so we can dedupe: once a user is placed, drop them from later pools.
   for (const pool of pools) {
@@ -66,15 +68,22 @@ export async function runMatch(): Promise<MatchRunResult> {
     if (!result) continue;
 
     for (const g of result.groups) {
-      groups.push(g);
-      g.memberIds.forEach((id) => assigned.add(id));
+      const outcome = await persistGroup(g, pool.slotId);
+      if (outcome.created) {
+        events.push(outcome.created);
+        g.memberIds.forEach((id) => assigned.add(id)); // only count placed on success
+      } else {
+        dropped.push({ reason: outcome.droppedReason ?? 'unknown' });
+        // members stay unassigned -> reported as unmatched
+      }
     }
   }
 
   const unmatchedUserIds = users.map((u) => u.id).filter((id) => !assigned.has(id));
   return {
     mode: useMockAi ? 'mock' : 'gemini',
-    groups,
+    events,
+    dropped,
     unmatchedUserIds,
     poolCount: pools.length,
   };
