@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Stack, useLocalSearchParams } from 'expo-router';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { StatusBar } from 'expo-status-bar';
+import { Ionicons } from '@expo/vector-icons';
 import { Button } from '@/components/Button';
 import { rsvp, eventAttendees, type Attendee } from '@/lib/api';
 import {
@@ -14,7 +16,16 @@ import {
 } from '@/lib/events';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/lib/auth';
-import { colors, fontWeight, radius, spacing } from '@/theme';
+import { dark, fonts, spacing } from '@/theme';
+
+function Stat({ num, label }: { num: string; label: string }) {
+  return (
+    <View style={styles.stat}>
+      <Text style={styles.statNum}>{num}</Text>
+      <Text style={styles.statLabel}>{label}</Text>
+    </View>
+  );
+}
 
 export default function EventScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -41,7 +52,7 @@ export default function EventScreen() {
       setMyStatus(status);
       setAttendees(people);
     } catch {
-      // ignore network errors — the screen just stays on its last state
+      // ignore network errors — the screen stays on its last state
     } finally {
       setLoaded(true);
     }
@@ -51,8 +62,6 @@ export default function EventScreen() {
     refresh();
   }, [refresh]);
 
-  // Live spot counter: refetch on any attendee change for this event.
-  // (Requires realtime enabled for event_attendees; harmless if not.)
   useEffect(() => {
     if (!id) return;
     const channel = supabase
@@ -60,9 +69,7 @@ export default function EventScreen() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'event_attendees', filter: `event_id=eq.${id}` },
-        () => {
-          refresh();
-        },
+        () => refresh(),
       )
       .subscribe();
     return () => {
@@ -92,7 +99,7 @@ export default function EventScreen() {
   if (!loaded || !event) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} size="large" />
+        <ActivityIndicator color={dark.accent} size="large" />
       </View>
     );
   }
@@ -101,53 +108,69 @@ export default function EventScreen() {
   const canRsvp = event.status !== 'cancelled' && !deadlinePassed;
 
   return (
-    <SafeAreaView style={styles.container} edges={['bottom']}>
-      <Stack.Screen options={{ headerShown: true, title: '', headerBackTitle: 'Back' }} />
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.badge, event.status === 'confirmed' ? styles.badgeConfirmed : event.status === 'cancelled' ? styles.badgeCancelled : styles.badgePending]}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
+      <StatusBar style="light" />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Pressable onPress={() => router.back()} hitSlop={12} style={styles.back}>
+          <Ionicons name="chevron-back" size={28} color={dark.text} />
+        </Pressable>
+
+        <View
+          style={[
+            styles.badge,
+            event.status === 'confirmed'
+              ? styles.badgeConfirmed
+              : event.status === 'cancelled'
+                ? styles.badgeCancelled
+                : styles.badgePending,
+          ]}
+        >
           <Text style={styles.badgeText}>{event.status}</Text>
         </View>
 
         <Text style={styles.title}>{event.title}</Text>
-        {event.description ? <Text style={styles.description}>{event.description}</Text> : null}
 
-        <View style={styles.row}>
-          <Text style={styles.label}>Where</Text>
-          <Text style={styles.value}>{event.venue_name}</Text>
+        <View style={styles.stats}>
+          <Stat num={`${confirmed}`} label="GOING" />
+          <Stat num={`${event.max_attendees}`} label="SPOTS" />
+          <Stat num={`${event.min_attendees}`} label="TO LOCK" />
         </View>
-        {event.venue_address ? (
-          <View style={styles.row}>
-            <Text style={styles.label}> </Text>
-            <Text style={styles.valueMuted}>{event.venue_address}</Text>
-          </View>
+
+        {event.description ? (
+          <>
+            <Text style={styles.sectionLabel}>INFO</Text>
+            <Text style={styles.description}>{event.description}</Text>
+          </>
         ) : null}
-        <View style={styles.row}>
-          <Text style={styles.label}>When</Text>
-          <Text style={styles.value}>{formatEventTime(event.starts_at)}</Text>
-        </View>
 
-        <View style={styles.counterBox}>
-          <Text style={styles.counterNum}>
-            {confirmed} of {event.min_attendees}
-          </Text>
-          <Text style={styles.counterLabel}>confirmed to lock this in</Text>
-        </View>
+        <Text style={styles.sectionLabel}>WHERE</Text>
+        <Text style={styles.value}>{event.venue_name}</Text>
+        {event.venue_address ? <Text style={styles.valueMuted}>{event.venue_address}</Text> : null}
+
+        <Text style={styles.sectionLabel}>WHEN</Text>
+        <Text style={styles.value}>{formatEventTime(event.starts_at)}</Text>
 
         {attendees.length > 0 && (
-          <View style={styles.whoBox}>
-            <Text style={styles.whoTitle}>Who's going</Text>
+          <>
+            <Text style={styles.sectionLabel}>WHO&apos;S GOING</Text>
             {attendees.map((a, i) => (
               <View key={i} style={styles.whoRow}>
                 <View style={styles.whoAvatar}>
                   <Text style={styles.whoInitial}>{(a.name || '?').charAt(0).toUpperCase()}</Text>
                 </View>
                 <Text style={styles.whoName}>{a.name}</Text>
-                <Text style={[styles.whoStatus, a.status === 'confirmed' && styles.whoConfirmed, a.status === 'declined' && styles.whoDeclined]}>
+                <Text
+                  style={[
+                    styles.whoStatus,
+                    a.status === 'confirmed' && styles.whoConfirmed,
+                    a.status === 'declined' && styles.whoDeclined,
+                  ]}
+                >
                   {a.status === 'confirmed' ? 'going' : a.status === 'declined' ? 'declined' : 'invited'}
                 </Text>
               </View>
             ))}
-          </View>
+          </>
         )}
 
         {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -160,7 +183,7 @@ export default function EventScreen() {
           <Text style={styles.footerMuted}>RSVP window has closed.</Text>
         ) : myStatus === 'confirmed' ? (
           <>
-            <Text style={styles.footerConfirmed}>You're in 🎉</Text>
+            <Text style={styles.footerConfirmed}>You&apos;re in 🎉</Text>
             <Button label="Can't make it" variant="ghost" onPress={() => act('decline')} loading={busy} />
           </>
         ) : (
@@ -175,49 +198,33 @@ export default function EventScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.background },
-  content: { padding: spacing(3) },
-  badge: { alignSelf: 'flex-start', paddingHorizontal: spacing(1.25), paddingVertical: spacing(0.5), borderRadius: radius.chip, marginBottom: spacing(2) },
-  badgePending: { backgroundColor: colors.pending },
-  badgeConfirmed: { backgroundColor: colors.confirmed },
-  badgeCancelled: { backgroundColor: '#F3D8D8' },
-  badgeText: { fontSize: 12, fontWeight: fontWeight.heading, color: colors.text },
-  title: { fontSize: 28, fontWeight: fontWeight.heading, color: colors.text },
-  description: { fontSize: 16, color: colors.textMuted, lineHeight: 23, marginTop: spacing(1) },
-  row: { flexDirection: 'row', marginTop: spacing(2) },
-  label: { width: 60, fontSize: 15, color: colors.textMuted },
-  value: { flex: 1, fontSize: 15, color: colors.text, fontWeight: fontWeight.heading },
-  valueMuted: { flex: 1, fontSize: 14, color: colors.textMuted },
-  counterBox: {
-    marginTop: spacing(4),
-    padding: spacing(3),
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.card,
-    alignItems: 'center',
-  },
-  counterNum: { fontSize: 36, fontWeight: fontWeight.heading, color: colors.primary },
-  counterLabel: { fontSize: 14, color: colors.textMuted, marginTop: spacing(0.5) },
-  error: { color: '#B00020', marginTop: spacing(2) },
-  whoBox: {
-    marginTop: spacing(3),
-    backgroundColor: colors.surface,
-    borderColor: colors.border,
-    borderWidth: 1,
-    borderRadius: radius.card,
-    padding: spacing(2),
-  },
-  whoTitle: { fontSize: 15, fontWeight: fontWeight.heading, color: colors.text, marginBottom: spacing(1) },
+  container: { flex: 1, backgroundColor: dark.bg },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: dark.bg },
+  content: { padding: spacing(2.5), paddingBottom: spacing(3) },
+  back: { marginBottom: spacing(2), alignSelf: 'flex-start' },
+  badge: { alignSelf: 'flex-start', paddingHorizontal: spacing(1.25), paddingVertical: spacing(0.5), borderRadius: 999, marginBottom: spacing(1.5) },
+  badgePending: { backgroundColor: dark.card2 },
+  badgeConfirmed: { backgroundColor: '#2E4433' },
+  badgeCancelled: { backgroundColor: '#4A2E2E' },
+  badgeText: { fontSize: 12, fontFamily: fonts.bodyBold, color: dark.text },
+  title: { fontSize: 34, fontFamily: fonts.heading, color: dark.text, lineHeight: 40 },
+  stats: { flexDirection: 'row', gap: spacing(1.5), marginTop: spacing(2.5) },
+  stat: { flex: 1, backgroundColor: dark.card, borderRadius: 16, paddingVertical: spacing(2), alignItems: 'center' },
+  statNum: { fontSize: 26, fontFamily: fonts.heading, color: dark.text },
+  statLabel: { fontSize: 12, fontFamily: fonts.bodyBold, color: dark.muted, marginTop: spacing(0.5), letterSpacing: 0.5 },
+  sectionLabel: { fontSize: 13, fontFamily: fonts.bodyBold, color: dark.muted, letterSpacing: 1, marginTop: spacing(3), marginBottom: spacing(1) },
+  description: { fontSize: 16, fontFamily: fonts.body, color: dark.text, lineHeight: 24 },
+  value: { fontSize: 16, fontFamily: fonts.bodyBold, color: dark.text },
+  valueMuted: { fontSize: 14, fontFamily: fonts.body, color: dark.muted, marginTop: spacing(0.25) },
   whoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing(0.75) },
-  whoAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.confirmed, alignItems: 'center', justifyContent: 'center', marginRight: spacing(1.5) },
-  whoInitial: { fontSize: 14, fontWeight: fontWeight.heading, color: colors.success },
-  whoName: { flex: 1, fontSize: 15, color: colors.text },
-  whoStatus: { fontSize: 13, color: colors.textMuted },
-  whoConfirmed: { color: colors.success, fontWeight: fontWeight.heading },
-  whoDeclined: { color: colors.textMuted, textDecorationLine: 'line-through' },
-  footer: { padding: spacing(3), gap: spacing(1) },
-  footerMuted: { textAlign: 'center', color: colors.textMuted },
-  footerConfirmed: { textAlign: 'center', color: colors.success, fontWeight: fontWeight.heading, fontSize: 16, marginBottom: spacing(1) },
+  whoAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: dark.card2, alignItems: 'center', justifyContent: 'center', marginRight: spacing(1.5) },
+  whoInitial: { fontSize: 15, fontFamily: fonts.bodyBold, color: dark.sage },
+  whoName: { flex: 1, fontSize: 15, fontFamily: fonts.body, color: dark.text },
+  whoStatus: { fontSize: 13, fontFamily: fonts.body, color: dark.muted },
+  whoConfirmed: { color: dark.sage, fontFamily: fonts.bodyBold },
+  whoDeclined: { color: dark.muted, textDecorationLine: 'line-through' },
+  error: { color: '#FF8A80', fontFamily: fonts.body, marginTop: spacing(2) },
+  footer: { padding: spacing(2.5), gap: spacing(1), borderTopWidth: 1, borderTopColor: dark.card },
+  footerMuted: { textAlign: 'center', fontFamily: fonts.body, color: dark.muted },
+  footerConfirmed: { textAlign: 'center', color: dark.sage, fontFamily: fonts.bodyBold, fontSize: 16, marginBottom: spacing(1) },
 });
