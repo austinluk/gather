@@ -9,7 +9,7 @@ export interface Activity {
   interest: string; // primary interest this serves (matches users.interests)
   durationMinutes: number; // event end = slot start + this
   minSize: number;
-  maxSize: number;
+  maxSize: number; // permissive cap; the group's size preference (small 3-4 / large 8-12) is the real driver
   venueQuery: string; // search term for Google Places / mock adapter
 }
 
@@ -21,7 +21,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'hiking',
     durationMinutes: 120,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'park OR trail OR beach',
   },
   {
@@ -31,7 +31,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'coffee',
     durationMinutes: 90,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'cafe OR coffee shop',
   },
   {
@@ -41,7 +41,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'board_games',
     durationMinutes: 150,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'board game cafe',
   },
   {
@@ -51,7 +51,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'art',
     durationMinutes: 90,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'art gallery',
   },
   {
@@ -61,7 +61,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'music',
     durationMinutes: 150,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'live music venue OR bar',
   },
   {
@@ -71,7 +71,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'running',
     durationMinutes: 60,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'seawall OR running track OR park',
   },
   {
@@ -81,7 +81,7 @@ export const ACTIVITIES: Activity[] = [
     interest: 'photography',
     durationMinutes: 120,
     minSize: 3,
-    maxSize: 5,
+    maxSize: 12,
     venueQuery: 'scenic viewpoint OR waterfront OR park',
   },
 ];
