@@ -24,6 +24,7 @@ export default function Demo() {
   const [events, setEvents] = useState<DemoEvent[] | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(null);
   const polling = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const load = useCallback(async () => {
@@ -57,15 +58,39 @@ export default function Demo() {
     setBusy(null);
   }
 
+  // Simulate the scheduled "weekly drop": a short delay, then matching runs and
+  // invites (in-app notifications) land for everyone matched.
+  function scheduledDrop() {
+    if (busy || countdown !== null) return;
+    let n = 6;
+    setCountdown(n);
+    const iv = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        clearInterval(iv);
+        setCountdown(null);
+        run('run', runMatch);
+      } else {
+        setCountdown(n);
+      }
+    }, 1000);
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>Demo control</Text>
-        <Text style={styles.subtitle}>Run the Sunday matching round live and watch events fill up.</Text>
+        <Text style={styles.subtitle}>Simulate the Sunday weekly drop — matching runs after a short delay and sends everyone their invite.</Text>
 
         <View style={styles.actions}>
-          <Button label="Generate events" onPress={() => run('run', runMatch)} loading={busy === 'run'} style={{ flex: 1 }} />
-          <Button label="Reset" variant="ghost" onPress={() => run('reset', resetDemo)} disabled={!!busy} />
+          <Button
+            label={countdown !== null ? `Plans drop in ${countdown}s…` : 'Run weekly drop'}
+            onPress={scheduledDrop}
+            loading={busy === 'run'}
+            disabled={countdown !== null}
+            style={{ flex: 1 }}
+          />
+          <Button label="Reset" variant="ghost" onPress={() => run('reset', resetDemo)} disabled={!!busy || countdown !== null} />
         </View>
 
         {error ? <Text style={styles.error}>{error}</Text> : null}

@@ -75,3 +75,20 @@ export async function demoState(): Promise<{ events: DemoEvent[] }> {
   return json as { events: DemoEvent[] };
 }
 
+export interface Attendee {
+  name: string;
+  status: 'invited' | 'confirmed' | 'declined';
+}
+
+// Who's in a Gemini-created event. Returns [] if the backend is unreachable.
+export async function eventAttendees(eventId: string): Promise<Attendee[]> {
+  try {
+    const res = await fetch(`${BASE}/events/${eventId}/attendees`);
+    if (!res.ok) return [];
+    const json = await res.json();
+    return (json?.attendees ?? []) as Attendee[];
+  } catch {
+    return [];
+  }
+}
+

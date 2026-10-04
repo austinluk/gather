@@ -3,7 +3,7 @@ import { Stack, useLocalSearchParams } from 'expo-router';
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '@/components/Button';
-import { rsvp } from '@/lib/api';
+import { rsvp, eventAttendees, type Attendee } from '@/lib/api';
 import {
   formatEventTime,
   getConfirmedCount,
@@ -25,18 +25,21 @@ export default function EventScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [attendees, setAttendees] = useState<Attendee[]>([]);
 
   const refresh = useCallback(async () => {
     if (!id || !session) return;
     try {
-      const [ev, count, status] = await Promise.all([
+      const [ev, count, status, people] = await Promise.all([
         getEvent(id),
         getConfirmedCount(id),
         getMyStatus(id, session.user.id),
+        eventAttendees(id),
       ]);
       setEvent(ev);
       setConfirmed(count);
       setMyStatus(status);
+      setAttendees(people);
     } catch {
       // ignore network errors — the screen just stays on its last state
     } finally {
@@ -130,6 +133,23 @@ export default function EventScreen() {
           <Text style={styles.counterLabel}>confirmed to lock this in</Text>
         </View>
 
+        {attendees.length > 0 && (
+          <View style={styles.whoBox}>
+            <Text style={styles.whoTitle}>Who's going</Text>
+            {attendees.map((a, i) => (
+              <View key={i} style={styles.whoRow}>
+                <View style={styles.whoAvatar}>
+                  <Text style={styles.whoInitial}>{(a.name || '?').charAt(0).toUpperCase()}</Text>
+                </View>
+                <Text style={styles.whoName}>{a.name}</Text>
+                <Text style={[styles.whoStatus, a.status === 'confirmed' && styles.whoConfirmed, a.status === 'declined' && styles.whoDeclined]}>
+                  {a.status === 'confirmed' ? 'going' : a.status === 'declined' ? 'declined' : 'invited'}
+                </Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {error ? <Text style={styles.error}>{error}</Text> : null}
       </ScrollView>
 
@@ -181,6 +201,22 @@ const styles = StyleSheet.create({
   counterNum: { fontSize: 36, fontWeight: fontWeight.heading, color: colors.primary },
   counterLabel: { fontSize: 14, color: colors.textMuted, marginTop: spacing(0.5) },
   error: { color: '#B00020', marginTop: spacing(2) },
+  whoBox: {
+    marginTop: spacing(3),
+    backgroundColor: colors.surface,
+    borderColor: colors.border,
+    borderWidth: 1,
+    borderRadius: radius.card,
+    padding: spacing(2),
+  },
+  whoTitle: { fontSize: 15, fontWeight: fontWeight.heading, color: colors.text, marginBottom: spacing(1) },
+  whoRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing(0.75) },
+  whoAvatar: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.confirmed, alignItems: 'center', justifyContent: 'center', marginRight: spacing(1.5) },
+  whoInitial: { fontSize: 14, fontWeight: fontWeight.heading, color: colors.success },
+  whoName: { flex: 1, fontSize: 15, color: colors.text },
+  whoStatus: { fontSize: 13, color: colors.textMuted },
+  whoConfirmed: { color: colors.success, fontWeight: fontWeight.heading },
+  whoDeclined: { color: colors.textMuted, textDecorationLine: 'line-through' },
   footer: { padding: spacing(3), gap: spacing(1) },
   footerMuted: { textAlign: 'center', color: colors.textMuted },
   footerConfirmed: { textAlign: 'center', color: colors.success, fontWeight: fontWeight.heading, fontSize: 16, marginBottom: spacing(1) },
