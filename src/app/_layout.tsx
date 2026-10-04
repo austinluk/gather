@@ -21,7 +21,14 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false }}>
+          {/* Tab routes swap instantly (no slide) */}
+          <Stack.Screen name="home" options={{ animation: 'none' }} />
+          <Stack.Screen name="explore" options={{ animation: 'none' }} />
+          <Stack.Screen name="events" options={{ animation: 'none' }} />
+          <Stack.Screen name="alerts" options={{ animation: 'none' }} />
+          <Stack.Screen name="profile" options={{ animation: 'none' }} />
+        </Stack>
       </AuthProvider>
     </SafeAreaProvider>
   );
