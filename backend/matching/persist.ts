@@ -1,6 +1,6 @@
 import { getActivity } from '../data/activities';
 import { supabaseAdmin } from '../lib/supabaseAdmin';
-import { venueAdapter } from '../venues';
+import { findVenue } from '../venues';
 import type { RawGroup } from '../ai/gemini';
 import { resolveSlotTime } from './slotTime';
 
@@ -32,7 +32,7 @@ export async function persistGroup(
   const time = resolveSlotTime(slotId, activity.durationMinutes);
   if (!time) return { droppedReason: 'unknown slot' };
 
-  const venue = await venueAdapter.find(group.activityId, group.areaId);
+  const venue = await findVenue(group.activityId, group.areaId);
   if (!venue) return { droppedReason: 'no suitable venue' };
 
   const { data: event, error } = await supabaseAdmin
