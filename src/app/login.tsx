@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Redirect } from 'expo-router';
+import { Redirect, router } from 'expo-router';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -93,6 +93,7 @@ export default function Login() {
           style={{ marginTop: spacing(2) }}
         />
         <Button label="Create account" variant="ghost" onPress={signUp} disabled={loading} />
+        <Button label="Open demo panel" variant="ghost" onPress={() => router.push('/demo')} disabled={loading} />
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

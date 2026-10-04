@@ -16,13 +16,17 @@ function extractJson(text: string): string {
 
 async function getGrouping(pool: Pool, correction?: string[]): Promise<unknown> {
   if (useMockAi) return mockGroupUsers(pool);
-  const text = await groupUsersWithGemini(pool, correction);
   try {
+    const text = await groupUsersWithGemini(pool, correction);
     return JSON.parse(extractJson(text));
-  } catch {
-    // Unparseable model output -> treat as "everyone unmatched"; validation then
-    // fails and the correction pass runs.
-    return { groups: [], unmatchedUserIds: pool.users.map((u) => u.id) };
+  } catch (err) {
+    // Gemini unavailable (e.g. 503 overload) or unparseable output -> fall back
+    // to the deterministic mock for this pool so a run never crashes mid-way.
+    console.warn(
+      '[match] gemini failed, using mock for this pool:',
+      err instanceof Error ? err.message : err,
+    );
+    return mockGroupUsers(pool);
   }
 }
 
