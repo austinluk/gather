@@ -6,6 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { TabBar } from '@/components/TabBar';
 import { useAuth } from '@/lib/auth';
+import { demoInvite } from '@/lib/api';
 import { formatEventTime, getMyInvites, type MyInvite } from '@/lib/events';
 import { dark, fonts, spacing } from '@/theme';
 
@@ -18,6 +19,7 @@ export default function Home() {
   const { session, profile } = useAuth();
   const [invites, setInvites] = useState<MyInvite[]>([]);
   const [dismissed, setDismissed] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!session) return;
@@ -30,6 +32,31 @@ export default function Home() {
   }, [session]);
 
   useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  // Demo: simulate the Sunday drop — 5s, then you're matched into a hike.
+  function runDrop() {
+    if (!session || countdown !== null) return;
+    setDismissed(false);
+    let n = 5;
+    setCountdown(n);
+    const iv = setInterval(() => {
+      n -= 1;
+      if (n <= 0) {
+        clearInterval(iv);
+        setCountdown(null);
+        (async () => {
+          try {
+            await demoInvite(session.user.id);
+            await load();
+          } catch {
+            // ignore — backend may be unreachable
+          }
+        })();
+      } else {
+        setCountdown(n);
+      }
+    }, 1000);
+  }
 
   const name = profile?.name || 'there';
   const newInvite = invites.find((i) => i.myStatus === 'invited');
@@ -47,6 +74,17 @@ export default function Home() {
             <Ionicons name="bookmark-outline" size={24} color={dark.text} />
           </View>
         </View>
+
+        <Pressable
+          style={[styles.drop, countdown !== null && styles.dropBusy]}
+          onPress={runDrop}
+          disabled={countdown !== null}
+        >
+          <Ionicons name="sparkles" size={18} color="#FFFFFF" />
+          <Text style={styles.dropText}>
+            {countdown !== null ? `Your plans drop in ${countdown}s…` : 'Run weekly drop'}
+          </Text>
+        </Pressable>
 
         {newInvite && !dismissed && (
           <Pressable style={styles.banner} onPress={() => router.push(`/event/${newInvite.event.id}`)}>
@@ -107,6 +145,18 @@ const styles = StyleSheet.create({
   welcome: { fontFamily: fonts.heading, fontSize: 28, color: dark.text, flex: 1 },
   name: { color: dark.accent },
   topIcons: { flexDirection: 'row', gap: spacing(2) },
+  drop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing(1),
+    backgroundColor: dark.accent,
+    borderRadius: 999,
+    paddingVertical: spacing(1.75),
+    marginBottom: spacing(3),
+  },
+  dropBusy: { opacity: 0.7 },
+  dropText: { fontFamily: fonts.bodyBold, fontSize: 16, color: '#FFFFFF' },
   section: { fontFamily: fonts.heading, fontSize: 24, color: dark.text, marginBottom: spacing(1.5) },
   banner: {
     flexDirection: 'row',
