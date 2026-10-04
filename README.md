@@ -81,7 +81,8 @@ No one has to plan anything. You just show up.
 
 ### Prerequisites
 - Node.js 18+
-- The [Expo Go](https://expo.dev/go) app on your phone (easiest), or an Android emulator / iOS simulator
+- Expo CLI
+- Android Studio (for Android) or Xcode (for iOS)
 
 ### Install
 ```bash
@@ -89,25 +90,10 @@ npm install
 ```
 
 ### Run
-Start the Expo dev server:
 ```bash
-npx expo start
+npm run android   # Android
+npm run ios       # iOS (requires macOS)
 ```
-Then open the app one of these ways:
-
-- **On your phone** — scan the QR code in the terminal with the **Expo Go** app (Android) or the Camera app (iOS). Phone and computer must be on the same Wi-Fi.
-- **Web browser** — press `w` in the terminal
-- **Android emulator** — press `a` (requires Android Studio)
-- **iOS simulator** — press `i` (requires macOS + Xcode)
-
-Shortcut scripts are also available:
-```bash
-npm run android   # start + open Android
-npm run ios       # start + open iOS (requires macOS)
-npm run web       # start + open web
-```
-
-> This project uses **Expo Router** — screens live in `src/app/`. The app runs in Expo Go with no native build required. (A development build is only needed later if you add a library with custom native code, e.g. push notifications.)
 
 ### Environment Variables
 Create a `.env` file in the root:

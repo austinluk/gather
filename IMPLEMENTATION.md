@@ -28,17 +28,21 @@ Before implementation:
 
 ### Scheduled matching rounds
 
-Do not trigger matching immediately when four users sign up.
+Do not trigger matching when a user signs up or when a threshold number of users is reached. Instead, matching runs on a fixed weekly cadence: a scheduled backend job starts the AI matching agent **every Sunday at 9:00am (`America/Vancouver`)**.
 
-Users join a scheduled matching round and select when they are available. At the advertised cutoff, the backend considers everyone waiting in that round.
+At that moment the job collects **every user waiting in the current round** — everyone who onboarded and selected availability for the week ahead — and hands them to the matching agent *together*, so it can optimize group composition across the entire pool rather than greedily matching whoever happens to be online.
+
+The Sunday 9am run is the round's cutoff: anyone who joined before Sunday morning is included; anyone who joins afterward rolls into the next week's round.
 
 Example product message:
 
-> Your weekend plans arrive Thursday at 6pm.
+> Your week's plans arrive Sunday morning.
 
-For the hackathon, configure a round a few minutes in the future so the automated flow can be demonstrated.
+Running weekly, grouping all users at once, is deliberate:
+- The agent sees the whole pool simultaneously and can weigh competing group assignments, instead of locking in early partial matches.
+- It gives users a predictable rhythm to anticipate — a weekly "drop" rather than random pings.
 
-A scheduled backend job initiates matching. A manual development command may exist for testing, but a user-facing button is not the primary trigger.
+A manual development command may trigger an off-cycle round for testing. For the hackathon demo, trigger a round immediately instead of waiting for Sunday so the automated flow can be shown live. A user-facing "generate" button is not the primary trigger.
 
 ### Fixed availability slots
 
@@ -88,18 +92,18 @@ Do not infer personality traits or unstated flexibility. Do not send names, phon
 
 ## Matching Pipeline
 
-### 1. Start a due round
+### 1. Start the weekly round
 
-A scheduler invokes a protected backend worker.
+A scheduler invokes a protected backend worker **every Sunday at 9:00am (`America/Vancouver`)**.
 
 The worker:
-- Finds a round whose cutoff has passed.
+- Finds the current weekly round whose Sunday-morning cutoff has passed.
 - Atomically claims it.
-- Takes an eligible-user snapshot.
+- Takes an eligible-user snapshot of everyone who was waiting at the cutoff.
 - Prevents concurrent execution of the same round.
 - Records completion or failure.
 
-Repeated scheduler invocations must not create duplicate events.
+Repeated scheduler invocations (e.g. retries, overlapping ticks) must not create duplicate events for the same weekly round.
 
 ### 2. Build manageable candidate pools
 

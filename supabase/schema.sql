@@ -7,6 +7,7 @@ create table users (
   area text,                -- "east_van", "downtown", "north_van"
   interests text[],         -- ["hiking", "coffee", "board_games"]
   availability jsonb,       -- { "saturday": ["10:00", "18:00"] }
+  group_size text,          -- preferred group size: "small" (3-4) | "large" (5-6)
   created_at timestamptz default now()
 );
 
