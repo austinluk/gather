@@ -18,7 +18,9 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
     ...(Platform.OS !== 'web' ? { storage: AsyncStorage } : {}),
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false,
+    // On web, parse the session from the URL after the email-confirmation
+    // redirect lands back on the app (so the user ends up logged in).
+    detectSessionInUrl: Platform.OS === 'web',
   },
 });
 

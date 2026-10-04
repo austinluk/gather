@@ -37,9 +37,15 @@ export default function SignIn() {
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       if (error) setError(error.message);
     } else {
-      const { data, error } = await supabase.auth.signUp({ email: email.trim(), password });
+      const redirectTo =
+        Platform.OS === 'web' && typeof window !== 'undefined' ? window.location.origin : undefined;
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+        options: { emailRedirectTo: redirectTo },
+      });
       if (error) setError(error.message);
-      else if (!data.session) setNotice('Account created — if email confirmation is on, confirm then log in.');
+      else if (!data.session) setNotice("Account created — check your email to confirm, then you'll be signed in.");
     }
     setLoading(false);
   }
