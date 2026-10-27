@@ -4,6 +4,14 @@
 
 ---
 
+## 🎥 Demo Video
+
+[**Watch the Gather Demo on YouTube**](https://www.youtube.com/watch?v=V4HhpIgSB14)
+
+See how Gather uses AI to bring people together through personalized, automatically generated social events.
+
+---
+
 ## The Problem
 
 Vancouver is known as one of the loneliest cities in North America. There's no shortage of things to do — but meeting new people is hard. Existing apps like Meetup and Eventbrite require a human organizer to create events first. Most people won't organize, but they *would* show up if someone else did.
@@ -96,8 +104,10 @@ npm run ios       # iOS (requires macOS)
 ```
 
 ### Environment Variables
+
 Create a `.env` file in the root:
-```
+
+```env
 OPENAI_API_KEY=
 GOOGLE_PLACES_API_KEY=
 YELP_API_KEY=
@@ -120,5 +130,3 @@ CLERK_PUBLISHABLE_KEY=
 5. Show how the preference profile updates after a post-event debrief
 
 ---
-
-## Built by Austin Luk
